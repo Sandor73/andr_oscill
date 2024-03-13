@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+ <meta charset="UTF-8">
+ <meta name="viewport" content="width=device-width, initial-scale=1">
+ <title>Осциллограф</title>
+ <a href="https://plotly.com/javascript/" target="_blank" class="plotly-link">Plotly</a>
+ <style>
+    .plotly-link {
+      color: #0000FF;
+      border: 2px solid #0000FF;
+      padding: 10px;
+      text-decoration: none;
+    }
+
+    .plotly-link:hover {
+      background-color: #F0F8FF;
+    }
+
+    body {
+      font-family: Arial, sans-serif;
+      background-color: rgb(35, 84, 162);
+    }
+
+    #graph {
+      width: 99%;
+      height: 520px;
+      border: 5px solid #3d2727;
+      margin-bottom: 20px; /* Добавлено для создания пространства между графиками */
+    }
+ </style>
+</head>
+
+<body>
+ <h1>Осциллограф</h1>
+ <div id="graph"></div>
+
+ <input type="text" id="ipAddress" placeholder="Введите IP-адрес">
+ <button onclick="updateIPAddress()">Обновить IP-адрес</button>
+
+ <script src="https://cdn.plot.ly/plotly-2.29.1.min.js" charset="utf-8"></script>
+
+ <script>
+   document.addEventListener('DOMContentLoaded', function () {
+    var graphDiv = document.getElementById('graph');
+    if (graphDiv) {
+        var updateInterval = 1;
+
+        var trace1 = {
+            x: [],
+            y: [],
+            mode: 'lines',
+            line: { color: 'red', width: 2 },
+            name: 'График 1',
+            type: 'scatter'
+        };
+
+        var trace2 = {
+            x: [],
+            y: [],
+            mode: 'lines',
+            line: { color: 'green', width: 2 },
+            name: 'График 2',
+            type: 'scatter'
+        };
+
+        var data = [trace1, trace2];
+
+        var layout = {
+            title: 'Осциллограф',
+            xaxis: { title: 'Время' },
+            yaxis: { title: 'Амплитуда' },
+            plot_bgcolor: '#7aa5eb',
+            paper_bgcolor: '#7aa5eb',
+            showlegend: true,
+            displayModeBar: true,
+        };
+
+        var config = {
+            showLink: true,
+            plotlyServerURL: "https://chart-studio.plotly.com",
+            scrollZoom: true,
+            displayModeBar: true,
+        };
+
+        Plotly.newPlot(graphDiv, data, layout, config);
+
+        var currentIPAddress = 'http://192.168.64.7/data';
+        var currentIPAddress2 = 'http://192.168.64.7/data2';
+
+        function updateGraph() {
+            Promise.all([
+                fetch(currentIPAddress).then(response => response.json()),
+                fetch(currentIPAddress2).then(response => response.json())
+            ]).then(function(values) {
+                var newData1 = values[0];
+                var newData2 = values[1];
+
+                trace1.x = newData1.map(point => point.time);
+                trace1.y = newData1.map(point => point.amplitude);
+                trace2.x = newData2.map(point => point.time);
+                trace2.y = newData2.map(point => point.amplitude);
+
+                // Обновление данных в массиве data
+                data[0] = trace1;
+                data[1] = trace2;
+
+                Plotly.update(graphDiv, data, layout, config);
+                setTimeout(updateGraph, updateInterval * 10); // Убедитесь, что updateInterval умножается на 1000, чтобы получить миллисекунды
+            }).catch(error => console.error('Ошибка при обновлении графика:', error));
+        }
+
+        updateGraph();
+    } else {
+        console.log("Элемент с id='graph' не найден.");
+    }
+});
+
+ </script>
+ 
+ </script>
+</body>
+
+</html>
